@@ -7,7 +7,7 @@ B=[-20,-10,-10,-10,-10,-10,-10,-20]+[-10,0,0,0,0,0,0,-10]*2+[-10,5,5,10,10,5,5,-
 R=[0]*8+[5,10,10,10,10,10,10,5]+[-5,0,0,0,0,0,0,-5]*5+[0,0,0,5,5,0,0,0]
 Q=[-20,-10,-10,-5,-5,-10,-10,-20]+[-10,0,0,0,0,0,0,-10]*2+[-5,0,5,5,5,5,0,-5,0,0,5,5,5,5,0,-5,-10,5,5,5,5,5,0,-10,-10,0,5,0,0,0,0,-10]+[-20,-10,-10,-5,-5,-10,-10,-20]
 K=[-30,-40,-40,-50,-50,-40,-40,-30]*4+[-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20]
-T=dict(P=P,N=N,B=B,R=R,Q=Q,K=K);n=0;L=50000
+T=dict(P=P,N=N,B=B,R=R,Q=Q,K=K);n=0;L=40000
 def post(p,b):
  r=urllib.request.Request(E+p,data=json.dumps(b).encode(),headers={"content-type":"application/json"})
  try:
@@ -68,12 +68,12 @@ def gen(b,w):
 def ab(b,w,d,a,z):
  global n;n+=1
  if n>L:return ev(b,w)
+ if d<0:return ev(b,w)
  if d==0:
   best=ev(b,w)
   for m in gen(b,w):
-   a0,c0=S(m)
-   if not b[c0]:continue
-   v=-ab(put(b,m),not w,0,-z,-a)
+   if not b[S(m)[1]]:continue
+   v=-ab(put(b,m),not w,-1,-z,-a)
    if v>best:best=v
    if best>a:a=best
    if a>=z:break
@@ -89,9 +89,9 @@ def ab(b,w,d,a,z):
 def choose(fen,legal):
  global n;n=0;b,w=parse(fen);best=legal[0];bv=-1e9
  def key(m):
-  a,c=S(m);t=b[c];return -(M[t.upper()]if t else 0)
+  t=b[S(m)[1]];return -(M[t.upper()]if t else 0)
  for m in sorted(legal,key=key):
-  v=-ab(put(b,m),not w,3,-1e9,1e9)
+  v=-ab(put(b,m),not w,2,-1e9,1e9)
   if v>bv:bv=v;best=m
  return best
 while 1:
@@ -99,5 +99,4 @@ while 1:
  if g["status"]=="done":break
  while g["status"]=="your_move":
   g=post("/move",{"game":g["game"],"move":choose(g["fen"],g["legal_moves"])})
- print(g.get("outcome"),file=sys.stderr)
-print(g.get("wins"),g.get("draws"),g.get("losses"),file=sys.stderr)
+ print(g.get("wins"),g.get("draws"),g.get("losses"),file=sys.stderr)
